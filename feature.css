@@ -14,7 +14,7 @@ body{
     background: #fff;
     margin: 200px auto 0;
     border-radius: 5px;
-    box-shadow: 0 0 10px #333;
+    box-shadow: 0 0 10px #333 ;
 }
 .row{
     display: flex;
@@ -54,10 +54,18 @@ button{
     border-radius: 3px;
     cursor: pointer;
 }
-.result-box ul li:hover{
+.result-box ul li.active{
     background-color: lightblue;
 }
 .result-box{
     max-height: 300px;
     overflow-y: scroll;
+}
+.spinner {
+  padding: 10px;
+  font-style: italic;
+}
+.no-results{
+  padding: 10px;
+  font-style: italic;
 }
