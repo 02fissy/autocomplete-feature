@@ -1,11 +1,39 @@
+const cache = new Map();
+const TTL =  60000;
+
+let undoStack = [];
+let redoStack = [];
+let isProgrammatic = false;
+
 
 async function  fetchSuggestions(query) {
+
+  const now = Date.now();
+
+    if (cache.has(query)) {
+        const cachedEntry = cache.get(query);
+
+        if (now - cachedEntry.timestamp < TTL) {
+            return cachedEntry.data; 
+        } else {
+            cache.delete(query); 
+        }
+    }
     resultsBox.innerHTML = "<div class='spinner'>Loading...</div>";
 
     try{
          const response = await fetch(`https://en.wikipedia.org/w/api.php?action=opensearch&search=${query}&limit=5&origin=*`);
-         const data =await response.json();
-         return data[1];
+         const data = await response.json();
+         const suggestions= data[1];
+
+         cache.set(query, {
+            data: suggestions,
+            timestamp: now
+        });
+
+        return suggestions;
+
+
     }catch(error) {
         resultsBox.innerHTML = "<div>Error loading results</div>";
         return[];
@@ -47,9 +75,12 @@ function saveToHistory(value) {
 }
 
 function fuzzyMatch(keyword, input) {
+  keyword = keyword.toLowerCase();
+  input = input.toLowerCase();
+
   let inputIndex = 0;
 
-  for (let char of keyword.toLowerCase()) {
+  for (let char of keyword) {
     if (char === input[inputIndex]) {
       inputIndex++;
     }
@@ -57,6 +88,7 @@ function fuzzyMatch(keyword, input) {
 
   return inputIndex === input.length;
 }
+
 
 const handleSearch = debounce( async function(e) {
 
@@ -79,6 +111,13 @@ const handleSearch = debounce( async function(e) {
 }, 300);
 
 inputBox.addEventListener("keyup", handleSearch);
+
+inputBox.addEventListener("input", () => {
+  if (isProgrammatic) return;
+
+  undoStack.push(inputBox.value);
+  redoStack = [];
+});
 
 function highlightMatch(text, input) {
   const regex = new RegExp(`(${input})`, "gi");
@@ -118,6 +157,41 @@ function display(result) {
 }
 document.addEventListener("keydown", function(e) {
 
+    
+
+     if (e.ctrlKey && e.key === "z") {
+        e.preventDefault();
+
+        if (undoStack.length > 1) {
+            const current = undoStack.pop();
+            redoStack.push(current);
+
+            const previous = undoStack[undoStack.length - 1];
+
+            isProgrammatic = true;
+            inputBox.value = previous;
+            isProgrammatic = false;
+
+            handleSearch({ key: "" });
+        }
+        return;
+    }
+
+    if (e.ctrlKey && e.key === "y") {
+        e.preventDefault();
+
+        if (redoStack.length) {
+            const next = redoStack.pop();
+            undoStack.push(next);
+
+            isProgrammatic = true;
+            inputBox.value = next;
+            isProgrammatic = false;
+
+            handleSearch({ key: "" });
+        }
+        return;
+    }
     const items = resultsBox.querySelectorAll("li");
     if (!items.length) return;
 

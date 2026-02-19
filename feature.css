@@ -57,6 +57,9 @@ button{
 .result-box ul li.active{
     background-color: lightblue;
 }
+.result-box ul li:hover{
+    background-color: lightblue;
+}
 .result-box{
     max-height: 300px;
     overflow-y: scroll;
