@@ -5,16 +5,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search</title>
     <link rel="stylesheet" href="feature.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="feature.js"></script>
 </head>
 <body>
-    <div class="search-box">
-        <div class="row">
-            <input type="text" id="input-box" placeholder="Search" autocomplete="off">
-            <button><svg xmlns="http://www.w3.org/2000/svg" class="search-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search-icon lucide-search"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg></button>
-        </div>
-        <div class="result-box">
-        </div>
+  <div class="search-box" x-data="search" @click.outside="results = []">
+    
+    <div class="row">
+      <input 
+        type="text"
+        placeholder="Search"
+        autocomplete="off"
+
+        x-model="query"
+        @input="onInput"
+        @keydown="handleKeydown"
+        @focus="showHistory"
+      >
+
+      <button type="button">
+        <svg xmlns="http://www.w3.org/2000/svg" class="search-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search-icon lucide-search"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+      </button>
     </div>
-    <script src="feature.js"></script>
+
+    <div class="result-box">
+      
+
+      <template x-show="loading">
+        <div class="spinner">Loading...</div>
+      </template>
+
+      <template x-show="!loading && results.length === 0 && query">
+        <div class="no-results">No results found</div>
+      </template>
+
+      <ul x-show="!loading && results.length">
+        <template x-for="(item, index) in results" :key="item">
+          <li 
+            @click="select(item)"
+            :class="{ 'active': currentIndex === index }"
+            x-html="highlightMatch(item)"
+          ></li>
+        </template>
+      </ul>
+
+    </div>
+  </div>
 </body>
 </html>
